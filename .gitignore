@@ -1,0 +1,30 @@
+# Ignore data 
+data/
+output/
+test/
+tests/
+examples/
+logs/
+
+# Ignore QC reports
+qc_reports/
+# Ignore any logs or temporary files
+**.log
+**.egg-info/
+# ignore pythom build files
+**build/
+**__pycache__
+
+# ignore data directories
+/**/Figs/
+/**/figs/
+/**/Fig/
+/**/fig/
+
+# Ignore Jupyter Notebook checkpoints
+**.ipynb_checkpoints
+/notebooks
+# Ignore Python virtual environments
+venv/
+**.sif
+**.def
