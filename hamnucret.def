@@ -1,0 +1,22 @@
+Bootstrap: docker
+From: continuumio/miniconda3
+
+%labels
+    OWNER = Manish Yadav
+
+%files
+    /home/pol_schiessel/maya620d/pol/Projects/Codebase/HAMNucRetSeq_pipeline/environment.yml /environment.yml
+
+%post
+    /opt/conda/bin/conda update -n base conda -c defaults
+    /opt/conda/bin/conda env create -f /environment.yml
+
+%runscript
+    source /opt/conda/etc/profile.d/conda.sh
+    conda activate nucseqret
+    exec "$@"
+
+%environment
+    export PYTHONPATH=/project
+    export BASH_ENV=/opt/conda/etc/bashrc
+    export PATH=/opt/conda/envs/nucseqret/bin:$PATH 

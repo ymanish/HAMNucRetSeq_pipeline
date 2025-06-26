@@ -27,6 +27,9 @@ dependencies:
   - scikit-learn
   - statsmodels
   - fastp
+  - pybedtools
+  - pyfaidx
+  - seqkit
   - pip:
       - pipdeptree
       - multiqc

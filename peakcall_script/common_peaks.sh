@@ -4,7 +4,7 @@ threads=4
 # ---------------------------------- paths -----------------------------------
 CHAIN=../data/annotations/hg18ToHg38.over.chain.gz                     # UCSC chain
 HAM_DIR=../data/hammoud_peaks
-MY_DIR=../data/macs3_mapq30_keepdup
+MY_DIR=../data/macs3_mapq13_keepdup
 # MY_DIR=../data/bam_sampled
 
 
@@ -17,15 +17,15 @@ declare -A HAM_RAW=(
 #     [pooled]=$MY_DIR/pooled_peaks.narrowPeak
 # )
 
-declare -A MY_SUMMITS=(
-    [d1]=$MY_DIR/donor1_summits.bed
-    [pooled]=$MY_DIR/pooled_summits.bed
-)
-
-
 # declare -A MY_SUMMITS=(
-#     [pooled]=../data/bam_sampled/pooled_summits.bed
+#     [d1]=$MY_DIR/donor1_summits.bed
+#     [pooled]=$MY_DIR/pooled_summits.bed
 # )
+
+
+declare -A MY_SUMMITS=(
+    [pooled]=../data/bam_sampled/pooled_summits.bed
+)
 
 txt2bed6 () {               # $1 txt  $2 bed6_out
     awk 'NR>1 {

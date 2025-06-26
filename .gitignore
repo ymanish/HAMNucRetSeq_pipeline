@@ -27,4 +27,3 @@ qc_reports/
 # Ignore Python virtual environments
 venv/
 **.sif
-**.def
