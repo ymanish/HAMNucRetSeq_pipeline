@@ -3,7 +3,7 @@ from src.modules.NucFreeEnergy import NucleosomeBreath
 import pandas as pd
 from src.config.path import DATA_DIR, RESULTS_DIR
 from src.config.custom_types import FreeEnergyResult, ProcessedSequence
-from typing import List, Tuple, Iterator
+from typing import List, Tuple, Iterator, Optional
 import itertools
 import tqdm 
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -15,11 +15,12 @@ import csv
 
 def calc_batch_energy(batch:List[ProcessedSequence],
                     method_nuc:str, *,  
+                    free_dna_method:Optional[str]=None,
                       hard:bool=False, 
                       style:str="b_index", 
                       style_sites:Tuple[int, int]=(0,13))-> List[FreeEnergyResult]:
 
-    nuc_breath = NucleosomeBreath(nuc_method=method_nuc)
+    nuc_breath = NucleosomeBreath(nuc_method=method_nuc, free_dna_method=free_dna_method)
     results:List[FreeEnergyResult]=[]
 
     if hard:
@@ -64,12 +65,14 @@ def process_fasta(path: Path, win: int = 147, step: int = 1) -> Iterator[Process
                 sub_seq += 1
                 yield ProcessedSequence(header, subid, slice_, start, end)
 
-def main(fasta_path: Path, batch_size: int, n_workers: int, outfile: Path = None)-> None:
+def main(fasta_path: Path, nuc_method:str, *, batch_size: int, 
+         n_workers: int, outfile:Path = None, 
+         freedna_method:Optional[str] = None)-> None:
 
 
     # generator of all windows
     windows = process_fasta(fasta_path, win=147, step=1)
-    #windows = itertools.islice(process_fasta(fasta_path, win=147, step=1), 21)
+    # windows = itertools.islice(process_fasta(fasta_path, win=147, step=1), 21)
 
     # chunk generator into batches of BATCH_SIZE
     def batcher(it, size):
@@ -87,7 +90,8 @@ def main(fasta_path: Path, batch_size: int, n_workers: int, outfile: Path = None
 
             futures = [pool.submit(calc_batch_energy, 
                                                     batch,
-                                                    method_nuc="crystal",
+                                                    method_nuc=nuc_method,
+                                                    free_dna_method=freedna_method,
                                                     hard=False,
                                                     style="b_index", 
                                                     style_sites=(0,13)) for batch in batcher(windows, batch_size)
@@ -113,6 +117,8 @@ def arg_parser():
     parser.add_argument("--batch_size", type=int, default=100, help="Number of sequences per batch.")
     parser.add_argument("--n_workers", type=int, default=21, help="Number of parallel workers.")
     parser.add_argument("--outfile", type=Path, help="Output file path for results.")
+    parser.add_argument("--nuc_method", type=str, default="hybrid", help="Method for nucleosome free energy calculation.")
+    parser.add_argument("--freedna_method", type=str, default=None, help="Method for free DNA energy calculation.")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -131,7 +137,10 @@ if __name__ == "__main__":
         n_workers = args.n_workers
     if args.outfile:
         OUTFILE = args.outfile
-
+    if args.nuc_method:
+        NUC_METHOD = args.nuc_method
+    if args.freedna_method:
+        FREEDNA_METHOD = args.freedna_method
     if not FASTA.exists():
         raise FileNotFoundError(f"FASTA file {FASTA} does not exist. Please check the path.")
     
@@ -143,7 +152,9 @@ if __name__ == "__main__":
     print(f"Output will be written to: {OUTFILE}")
 
     # main(FASTA, batch_size=100, n_workers=21, outfile=Path(RESULTS_DIR/"nucfe/bound_free_energy_results.txt"))
-    main(FASTA, batch_size=batch_size, n_workers=n_workers, outfile=Path(OUTFILE))
+    main(FASTA, batch_size=batch_size, nuc_method=NUC_METHOD, 
+         n_workers=n_workers, outfile=Path(OUTFILE), 
+         freedna_method=FREEDNA_METHOD)
 
     end = time.perf_counter()
     print(f"Total time taken: {end - start:.2f} seconds")

@@ -1,15 +1,22 @@
 set -o pipefail ## Exit on any error in a pipeline
 
-threads=20                        
+threads=21                        
 # ulimit -n 8192    ## INCREASE MAX OPEN FILES
 
 REF=../data/annotations/hg38.fa                  
 IDX=../data/annotations/hg38
 
-FASTQ_DIR=../data/raw/SRA_trimmed_1/     # *.trim.fastq.gz from fastp step
-BAM_DIR=../data/bam
+# FASTQ_DIR=../data/raw/SRA_trimmed_1/     # *.trim.fastq.gz from fastp step
+FASTQ_DIR=../data/raw/SRA/     # *.trim.fastq.gz from fastp step
+
+# BAM_DIR=../data/bam
 LOG_DIR=../logs
-MET=../data/metrics
+# MET=../data/metrics
+
+
+BAM_DIR=../data/bam_notrim
+MET=../data/metrics_notrim
+
 
 mkdir -p "${BAM_DIR}" "${LOG_DIR}" "${MET}"
 
@@ -39,7 +46,9 @@ echo "Samples to process: ${#SRR_ACCESSIONS[@]}"
 
 for sample in "${SRR_ACCESSIONS[@]}"; do
 
-  fq="${FASTQ_DIR}/${sample}.trim.fastq.gz" 
+  # fq="${FASTQ_DIR}/${sample}.trim.fastq.gz" 
+  fq="${FASTQ_DIR}/${sample}.fastq.gz" 
+
   bam_sort="${BAM_DIR}/${sample}.sort.bam"       # temp sorted BAM
   log="${LOG_DIR}/${sample}.bowtie2.log"
   bam_dup="${BAM_DIR}/${sample}.mkdup.bam"       # duplicate-marked
@@ -77,7 +86,7 @@ done
 ###### Filtering low-quality reads loop
 for sample in "${SRR_ACCESSIONS[@]}"; do
   bam_dup="${BAM_DIR}/${sample}.mkdup.bam"                    # input for filtering
-  bam_filtered="${BAM_DIR}/${sample}.mkdup.mapq13.nodup.bam"    # output filtered BAM
+  bam_filtered="${BAM_DIR}/${sample}.mkdup.mapq30.keepdup.bam"    # output filtered BAM
 
   # Only process if the duplicate-marked file exists but the filtered file doesn't
   if [[ ! -f "${bam_dup}" ]]; then
@@ -91,8 +100,8 @@ for sample in "${SRR_ACCESSIONS[@]}"; do
   fi
 
   echo "[filter] MAPQ≥30 primary alignments"
-  samtools view -@ "${threads}" -b -F 4 -F 256 -q 13 "${bam_dup}" > "${bam_filtered}"
-  # samtools view -@ "${threads}" -b -F 4 -q 30 "${bam_dup}" > "${bam_filtered}"
+  # samtools view -@ "${threads}" -b -F 4 -F 256 -q 30 "${bam_dup}" > "${bam_filtered}"
+  samtools view -@ "${threads}" -b -F 4 -q 30 "${bam_dup}" > "${bam_filtered}"
   # -F 4: exclude unmapped reads
   # -F 256: exclude secondary alignments
   # -q 30: exclude reads with MAPQ < 30

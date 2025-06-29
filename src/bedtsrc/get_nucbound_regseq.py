@@ -6,6 +6,7 @@ from src.config.path import DATA_DIR
 import pybedtools as pbt
 import numpy as np
 import sys
+from Bio.Seq import Seq
 
 ANNOT_DIR   = DATA_DIR/"annotations"
 
@@ -36,9 +37,10 @@ peaks = pd.read_csv(peaks_path,
                     sep="\t", 
                     header=None,
                     names=['chr','start','end','id','score','strand', 'fe','logP','logQ','rel_summit'])
-valid_chroms = [f"chr{i}" for i in range(1, 23)] + ["chrX", "chrY"]
 
+valid_chroms = [f"chr{i}" for i in range(1, 23)] + ["chrX", "chrY"]
 peaks = peaks[peaks.chr.isin(valid_chroms)]
+
 
 with open(out_fa, "w") as out_fh:
     for row in peaks.itertuples(index=False):

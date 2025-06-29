@@ -37,3 +37,6 @@ else
     echo "ERROR: 01_split_fasta.sh encountered an error. Aborting submission."
     exit 1
 fi
+
+
+# awk 'BEGIN {FS=OFS="\t"} FNR==1 && NR!=1{next} {print}' *.tsv > combined_file.tsv

@@ -18,8 +18,17 @@ module load apps/singularity
 # ----------------Commands------------------------ 
 echo $PWD
 
+NUC_METHOD="hybrid"  # Method for calculating free energy
+FREEDNA_METHOD="md"  # Method for free DNA calculation, Comment if want to set None
+
+if [ -z "${FREEDNA_METHOD:-}" ]; then
+    extra_arg=""
+else
+    extra_arg="--freedna_method $FREEDNA_METHOD"
+fi
+
 CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/bound_regions/chunks"  # Directory with chunk files
-OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/bound_regions"  # Output directory for results
+OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/bound_regions/${NUC_METHOD}_freedna_${FREEDNA_METHOD}"  # Output directory for results
 PATTERN="pooled_peaks_bound.part_"        # Filename pattern before the number
 OUTPUT_PATTERN="pooled_peaks_bound_nucfe_"  # Output filename pattern
 PYTHON_WORKERS_BATCH_SIZE=1000  # Number of sequences to process in each batch
@@ -59,7 +68,9 @@ singularity exec --bind $PWD:/project hamnucret.sif python3 /project/src/core/co
     --infile "$INPUT_FILE" \
     --outfile "${OUTPUT_DIR}/${OUT_PATTERN}${TASK_ID_PADDED}.tsv" \
     --n_workers "$SLURM_NTASKS" \
-    --batch_size $PYTHON_WORKERS_BATCH_SIZE 
+    --batch_size $PYTHON_WORKERS_BATCH_SIZE \
+    --nuc_method "$NUC_METHOD" \
+    $extra_arg
 
 # singularity exec nuc_retention.sif which python3
 

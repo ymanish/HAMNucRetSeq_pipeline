@@ -2,8 +2,10 @@ set -euo pipefail
 ulimit -n 8192  
 
 threads=20                       # same as upstream
-MACS_DIR=../data/macs3_mapq30_keepdup
-BAM_DIR=../data/bam
+MACS_DIR=../data/macs3_mapq30_keepdup_notrim
+# BAM_DIR=../data/bam_groups
+BAM_DIR=../data/bam_groups_notrim
+
 LOG_DIR=../logs
 mkdir -p "${MACS_DIR}" "${LOG_DIR}"
 
@@ -21,12 +23,13 @@ declare -A groups2=(
   # [d2d3d4]="d2d3d4_hist d2d3d4_input"
 )
 
+
 for tag in "${!groups2[@]}"; do
   IFS=' ' read -r CHIP CTRL <<< "${groups2[$tag]}"
   echo "[macs3] Calling peaks for ${tag} (ChIP: ${CHIP}, Control: ${CTRL})"
   macs3 callpeak \
-      -t "../data/bam_groups/${CHIP}.mkdup.mapq30.keepdup.bam" \
-      -c "../data/bam_groups/${CTRL}.mkdup.mapq30.keepdup.bam" \
+      -t "${BAM_DIR}/${CHIP}.mkdup.mapq30.keepdup.bam" \
+      -c "${BAM_DIR}/${CTRL}.mkdup.mapq30.keepdup.bam" \
       --nomodel --extsize 150 \
       --min-length 150 \
       --llocal 10000 --slocal 1000 \

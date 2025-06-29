@@ -6,14 +6,19 @@ ulimit -n 8192    ## INCREASE MAX OPEN FILES
 REF=../data/annotations/hg38.fa 
 REFSIZE=../data/annotations/hg38.chrom.sizes                 
 IDX=../data/annotations/hg38
-MET=../data/metrics
-BAM_DIR=../data/bam
-BAM_DIR_GRPS=../data/bam_groups
+MET=../data/metrics_notrim
+# MET=../data/metrics
+
+# BAM_DIR=../data/bam
+# BAM_DIR_GRPS=../data/bam_groups
+
+BAM_DIR=../data/bam_notrim
+BAM_DIR_GRPS=../data/bam_groups_notrim
 LOG_DIR=../logs
 
 mkdir -p "${BAM_DIR}" "${LOG_DIR}" "${MET}" "${BAM_DIR_GRPS}"
-STATS_FILE="${MET}/group_depths_mapq13_nodup.tsv"
-# STATS_FILE="${MET}/group_depths_mapq30_nodup.tsv"
+# STATS_FILE="${MET}/group_depths_mapq13_nodup.tsv"
+STATS_FILE="${MET}/group_depths_mapq30_keepdup.tsv"
 
 echo -e "group\treads_M" > "$STATS_FILE"    # header line
 ##############################################################################
@@ -45,14 +50,14 @@ for grp in "${!groups1[@]}"; do
     echo "Processing group: $grp"
     echo "Members: ${groups1[$grp]}"
 
-    fout="${BAM_DIR_GRPS}/${grp}.mkdup.mapq13.nodup.bam"
+    fout="${BAM_DIR_GRPS}/${grp}.mkdup.mapq30.keepdup.bam"
     
     [[ -f $fout ]] || {
         echo "[merge] $grp"
         
         bam_list=()
         for id in ${groups1[$grp]}; do
-            bam_list+=("${BAM_DIR}/${id}.mkdup.mapq13.nodup.bam")
+            bam_list+=("${BAM_DIR}/${id}.mkdup.mapq30.keepdup.bam")
         done
         
         samtools merge -@${threads} -o "$fout" "${bam_list[@]}"
