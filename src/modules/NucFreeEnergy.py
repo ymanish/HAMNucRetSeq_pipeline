@@ -14,9 +14,12 @@ from src.modules import NUC_STATE_PATH, K_POSRESC_PATH
 
 from methods import nucleosome_free_energy, read_nucleosome_triads, GenStiffness, calculate_midstep_triads
 from binding_model import binding_model_free_energy
+# from line_profiler import profile 
+from src.core.helper.fn_wraps import timeit
 
 
 class NucleosomeBreath:
+
     def __init__(self,  
                 nuc_method:str='crystal', free_dna_method: Optional[str] = None):
         
@@ -36,6 +39,11 @@ class NucleosomeBreath:
         self.nuctriads = read_nucleosome_triads(self.triadfn)
 
         self.fn = K_POSRESC_PATH
+        self.K_resc = np.load(self.fn)
+
+
+        self.nuc_mu0 = calculate_midstep_triads(triad_ids = self.select_phosphate_bind_sites(), 
+                                           nucleosome_triads = self.nuctriads)
 
     def get_left_right_open(self, left:int, right:int, style:str="b_index") -> tuple:
         if style == "b_index":
@@ -66,7 +74,8 @@ class NucleosomeBreath:
         
         ### The left and right open are the number of open phosphates on each side
         return l_open, r_open
-    
+
+
     def calculate_free_energy_soft(self, seq601:str, left:int, right:int, 
                                    id:Optional[str]=None, subid:Optional[str]=None,
                                     kresc_factor:float = 1, style:str="b_index", bound_ends:str="exclude")-> FreeEnergyResult:
@@ -75,23 +84,16 @@ class NucleosomeBreath:
                                 in that case there two outermost base pair steps which can either be calculated as 
                                 bound or unbound separately. Or you can include them as just bound dna part of the histone core"""
         
-        stiff, gs = self.genstiff_nuc.gen_params(seq601, use_group=True)
-        # print("stiff shape:", stiff.shape)
-        # print("length of stiff:", len(stiff))
-        # raise ValueError("Testing Termination of the code")
-    
-        l_open, r_open = self.get_left_right_open(left, right, style)
-        K_resc = np.load(self.fn)
+        stiff, gs = self.genstiff_nuc.gen_params(seq601, use_group=True, sparse=False)
 
-        nuc_mu0 = calculate_midstep_triads(triad_ids = self.select_phosphate_bind_sites(), 
-                                           nucleosome_triads = self.nuctriads)
-        
+        l_open, r_open = self.get_left_right_open(left, right, style)
+
 
         F_dict = binding_model_free_energy(
             gs,
             stiff,    
-            nuc_mu0,
-            K_resc*kresc_factor,
+            self.nuc_mu0,
+            self.K_resc*kresc_factor,
             left_open=l_open,
             right_open=r_open,
             use_correction=True,
@@ -214,10 +216,31 @@ class NucleosomeBreath:
     
 
 if __name__ == "__main__":
+    import time
+    start = time.perf_counter()
     Seq601 = "CTGGAGAATCCCGGTGCCGAGGCCGCTCAATTGGTCGTAGACAGCTCTAGCACCGCTTAAACGCACGTACGCGCTGTCCCCCGCGTTTTAACCGCCAAGGGGATTACTCCCTAGTCTCCAGGCACGTGTCAGATATATACATCCTGT"
     # Example usage
-    nuc_breath = NucleosomeBreath(nuc_method='crystal', free_dna_method="md")
-    result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=1, right=12, style="ph_index")
-    print(result)
+    nuc_breath = NucleosomeBreath(nuc_method='hybrid', free_dna_method=None)
+    result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=0, right=0, style="open_sites")
+    # print(f"Free energy: {result.F}, Entropy: {result.F_entropy}, Enthalpy: {result.F_enthalpy}, Free DNA energy: {result.F_freedna}, dF: {result.F - result.F_freedna}")
+    # for i in range(10):
+    #     nuc_breath = NucleosomeBreath(nuc_method='hybrid', free_dna_method=None)
+    #     result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=0, right=13, style="b_index")
+    #     # print(f"Left: {i}, Right: 13, Result: {result}")
+    #     print(f"Free energy: {result.F}, Entropy: {result.F_entropy}, Enthalpy: {result.F_enthalpy}, Free DNA energy: {result.F_freedna}, dF: {result.F - result.F_freedna}")
+
+    # # # for i in range(0, 14):
+    #     result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=0, right=i, style="b_index")
+    #     print(f"Left: 0, Right: {i}, Result: {result}")
+    
+
+    # for i in range(0, 14):
+    #     for j in range(0, 14):
+    #         if j >= i:
+    #             result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=i, right=j, style="b_index")
+                # print(f"L:{i}, R:{j} ------ Free energy: {result.F}, Entropy: {result.F_entropy}, Enthalpy: {result.F_enthalpy}, Free DNA energy: {result.F_freedna}, dF: {result.F - result.F_freedna}")
+    # result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=0, right=13, style="b_index")
+    end = time.perf_counter()
+    print(f"Time taken: {end - start:.2f} seconds")
     # nuc_breath.calculate_nonbound_dna_energy(seq=Seq601, left_open=0, right_open=0, bound_ends="exclude")
 

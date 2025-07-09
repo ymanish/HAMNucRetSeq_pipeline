@@ -1,0 +1,125 @@
+#!/bin/bash
+# ---------------- SLURM parameters ----------------
+#SBATCH -p all.q
+#SBATCH --ntasks 2                 # total logical cores you requested
+#SBATCH --mem-per-cpu=1G
+#SBATCH --cpus-per-task=1
+#SBATCH --cpu-freq=high
+#SBATCH --tmp=10G
+#SBATCH -N 1
+#SBATCH --mail-type=ALL
+#SBATCH -J HAMNucRetSeq_pipeline
+#SBATCH -D /home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline
+#SBATCH --output=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.out
+#SBATCH --error=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.error
+#SBATCH -A undefined
+
+# ---------------- Load modules --------------------
+module load apps/singularity
+
+# ---------------- Runtime setup -------------------
+echo "SLURM job $SLURM_JOB_ID - array task $SLURM_ARRAY_TASK_ID"
+echo "Running on $(hostname -s)   ($(lscpu | grep 'Model name' | sed 's/^.*: //'))"
+
+if [ -n "$SLURM_TMPDIR" ] && [ -d "$SLURM_TMPDIR" ]; then
+    export TMPDIR="$SLURM_TMPDIR"             
+else
+    export TMPDIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/temps"
+    mkdir -p "$TMPDIR"
+fi
+echo "Using TMPDIR=$TMPDIR"
+
+
+
+# ------- create a writeable Numba cache unique to this node ----------
+NUMBA_CACHE_DIR="$TMPDIR/numba_cache"
+mkdir -p "$NUMBA_CACHE_DIR"
+export NUMBA_CACHE_DIR
+export NUMBA_CPU_NAME=generic      
+
+# Prevent nested parallelism
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMBA_NUM_THREADS=1
+
+# ----------------PARAMETERS------------------------
+PYTHON_WORKERS_BATCH_SIZE=1000
+NUC_METHOD="crystal"
+#FREEDNA_METHOD="md"
+
+if [ -z "${FREEDNA_METHOD:-}" ]; then
+    extra_arg=""
+else
+    extra_arg="--freedna_method $FREEDNA_METHOD"
+fi
+
+
+#-----------------DIRECTORIES-------------------------------
+
+CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/bound_regions/chunks"  # Directory with chunk files
+PATTERN="pooled_peaks_bound.part_"        # Filename pattern before the number
+
+if [ ! -d "$CHUNK_DIR" ]; then
+    echo "ERROR: Chunk directory $CHUNK_DIR does not exist!"
+    exit 1
+fi
+
+OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/bound_regions/${NUC_METHOD}_freedna_${FREEDNA_METHOD}"  # Output directory for results
+mkdir -p "$OUTPUT_DIR" 
+
+#-----------------SLURM ARRAY JOB SETUP--------------------
+# Automatically determine number of chunks
+# Uncomment below and remove the --array=1-<N> above if you prefer automatic counting
+CHUNK_FILES=(${CHUNK_DIR}/${PATTERN}*.fa)
+TOTAL_CHUNKS=${#CHUNK_FILES[@]}
+if [ -z "$SLURM_ARRAY_TASK_COUNT" ]; then
+    echo "Array count not set, using detected chunk count: $TOTAL_CHUNKS"
+    SLURM_ARRAY_TASK_ID=$((SLURM_ARRAY_TASK_ID % TOTAL_CHUNKS + 1))
+fi
+
+
+# Calculate zero-padded index (3 digits)
+TASK_ID_PADDED=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
+
+# Build input filename
+INPUT_FILE="${CHUNK_DIR}/${PATTERN}${TASK_ID_PADDED}.fa"
+
+echo "Processing array job $SLURM_ARRAY_TASK_ID"
+echo "Using input file: $INPUT_FILE"
+
+# Check if input file exists
+if [ ! -f "$INPUT_FILE" ]; then
+    echo "ERROR: Input file $INPUT_FILE not found!"
+    exit 1
+fi
+
+
+###-----------------RUN THE WARMUP -----------------------------------
+
+echo "-> Warming up Numba kernels (one-time per node)...."
+
+singularity exec \
+    --env NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" \
+    --bind $PWD:/project \
+    hamnucret.sif python3 /project/src/modules/NucFreeEnergy.py
+
+echo "[+] Warm-up done - generic .so files in \$NUMBA_CACHE_DIR"
+
+###-----------------RUN THE COMPUTATION -----------------------------------
+
+echo "-> Launching main worker script....."
+singularity exec \
+    --env NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" \
+    --env TMPDIR="$TMPDIR" \
+    --bind $PWD:/project,"$TMPDIR":"$TMPDIR" \
+    hamnucret.sif \
+    python3 /project/src/core/compute_nucbreath.py \
+        --infile   "$INPUT_FILE" \
+        --outfile  "${OUTPUT_DIR}/${TASK_ID_PADDED}.tsv" \
+        --n_workers "$SLURM_NTASKS" \
+        --batch_size "$PYTHON_WORKERS_BATCH_SIZE" \
+        --nuc_method "$NUC_METHOD" \
+        $extra_arg
+
+echo "Free-energy calculation finished - results in ${OUTPUT_DIR}/${TASK_ID_PADDED}.tsv"

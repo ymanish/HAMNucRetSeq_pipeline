@@ -1,5 +1,5 @@
 """
-Create length-matched `un-bound` control intervals that exclude 
+Create length-matched un-bound control intervals that exclude 
 - assembly gaps, 
 - RepeatMasker repeats,
 - and the original peak set;
@@ -8,19 +8,13 @@ then extract their FASTA sequences.
 Author: Manish 
 """
 
-import subprocess, sys, pathlib, tempfile
+import sys, pathlib, tempfile
 from src.config.path import DATA_DIR
 from pathlib import Path
 import pandas as pd
 import pybedtools as pbt
 from pyfaidx import Fasta
-# -------- helper -------------------------------------------------------------
-def run(cmd: str, desc: str):
-    """Run a shell command, raise on error, stream stdout/stderr."""
-    print(f"[+] {desc}")
-    res = subprocess.run(cmd, shell=True)
-    if res.returncode:
-        sys.exit(f"Error {desc} failed (exit {res.returncode})")
+
 
 
 MACS3_PEAKS_DIR = DATA_DIR/ "macs3_mapq30_keepdup"
@@ -48,19 +42,6 @@ tmpdir = pathlib.Path(tmp.name)
 if not hgfa.with_suffix(".fa.fai").exists():
     sys.exit("FASTA index .fai not found; run 'samtools faidx hg38.fa' first.")
 
-
-# -------- gap + rmsk -----------------------------------------------
-if not gap_bed.exists():
-    url_gap = ("https://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/gap.txt.gz")
-    run(f"wget -qO- {url_gap} | gunzip -c | "
-        f"awk '{{print $2\"\\t\"$3\"\\t\"$4}}' > {gap_bed}",
-        "download & convert gap.txt")
-
-if not rmsk_bed.exists():
-    url_rmsk = ("https://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/rmsk.txt.gz")
-    run(f"wget -qO- {url_rmsk} | gunzip -c | "
-        f"awk '{{print $6\"\\t\"$7\"\\t\"$8}}' > {rmsk_bed}",
-        "download & convert rmsk.txt")
 
 peaks = pd.read_csv(peaks_path, 
                     sep="\t", 
@@ -110,6 +91,5 @@ with open(unbound_fa, "w") as out_fh:
         out_fh.write(f">{header}\n{seq_str}\n")
 
 print(f"[+] Un-bound FASTA written ({unbound_fa})")
-print("\nDone!")
-print(f"   Un-bound BED : {unbound_bed}")
-print(f"   Un-bound FA  : {unbound_fa}")
+print(f"Un-bound BED : {unbound_bed}")
+print(f"Un-bound FA  : {unbound_fa}")

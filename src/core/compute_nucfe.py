@@ -141,6 +141,8 @@ if __name__ == "__main__":
         NUC_METHOD = args.nuc_method
     if args.freedna_method:
         FREEDNA_METHOD = args.freedna_method
+    else:
+        FREEDNA_METHOD = None
     if not FASTA.exists():
         raise FileNotFoundError(f"FASTA file {FASTA} does not exist. Please check the path.")
     

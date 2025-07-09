@@ -27,3 +27,14 @@ class ProcessedSequence(NamedTuple):
     sequence: str
     start_site: int
     end_site: int
+
+
+class NuclBreathingResult(NamedTuple):
+    """Container for nucleosome breathing results."""
+    id: str
+    subid: str
+    sequence: str
+    leftbind_indx: int
+    rightbind_indx: int
+    F_vals: FreeEnergyResult
+    Adsorp_F: float = 0.0

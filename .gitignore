@@ -5,7 +5,8 @@ test/
 tests/
 examples/
 logs/
-
+temps/
+numba_cache/
 # Ignore QC reports
 qc_reports/
 # Ignore any logs or temporary files

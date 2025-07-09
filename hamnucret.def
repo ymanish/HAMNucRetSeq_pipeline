@@ -5,11 +5,12 @@ From: continuumio/miniconda3
     OWNER = Manish Yadav
 
 %files
-    /home/pol_schiessel/maya620d/pol/Projects/Codebase/HAMNucRetSeq_pipeline/environment.yml /environment.yml
+    /home/pol_schiessel/maya620d/pol/Projects/Codebase/HAMNucRetSeq_pipeline/prod_env.yml /prod_env.yml
+    /home/pol_schiessel/maya620d/pol/Projects/Codebase/Spermatogensis/backend /opt/backend
 
 %post
     /opt/conda/bin/conda update -n base conda -c defaults
-    /opt/conda/bin/conda env create -f /environment.yml
+    /opt/conda/bin/conda env create -f /prod_env.yml
 
 %runscript
     source /opt/conda/etc/profile.d/conda.sh
@@ -17,6 +18,6 @@ From: continuumio/miniconda3
     exec "$@"
 
 %environment
-    export PYTHONPATH=/project
+    export PYTHONPATH=/project:/opt/backend
     export BASH_ENV=/opt/conda/etc/bashrc
     export PATH=/opt/conda/envs/nucseqret/bin:$PATH 

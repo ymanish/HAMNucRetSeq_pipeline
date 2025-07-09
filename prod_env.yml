@@ -5,23 +5,12 @@ channels:
   - defaults
 dependencies:
   - python=3.10
-  - fastqc
-  - trimmomatic
-  - bowtie2
-  - samtools
-  - macs3
-  - bedtools
-  - deeptools
-  - ucsc-liftover
-  - sra-tools
   - biopython
   - numpy
   - pandas
   - matplotlib
   - seaborn
-  - ucsc-bedgraphtobigwig
   - scipy
-  - brokenaxes
   - numba
   - tqdm
   - scikit-learn
@@ -30,11 +19,8 @@ dependencies:
   - pybedtools
   - pyfaidx
   - seqkit
-  - dask
-  - hvplot
-  - datashader
   - psutil
+  - brokenaxes
   - pip:
       - pipdeptree
-      - multiqc
       - line_profiler

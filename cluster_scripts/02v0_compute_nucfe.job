@@ -4,6 +4,8 @@
 #SBATCH --ntasks 32 # Total of independent tasks or cores
 #SBATCH --mem-per-cpu=1G 
 #SBATCH --cpus-per-task=1 # Each task gets 2 CPUs (logical cores or threads)
+#SBATCH --cpu-freq=high
+#SBATCH --tmp=10G
 #SBATCH -N 1 
 #SBATCH --mail-type=ALL 
 #SBATCH -J HAMNucRetSeq_pipeline
@@ -18,8 +20,26 @@ module load apps/singularity
 # ----------------Commands------------------------ 
 echo $PWD
 
+###safety, although I am setting this in the python code itself. 
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
+
+#-----------------SETUP TEMP DIR------------------------------
+
+# export TMPDIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/scratch/${SLURM_JOB_ID}/tmp"
+# mkdir -p "$TMPDIR"
+SCRATCH=${SLURM_TMPDIR}
+echo "Node-local scratch is $SCRATCH"
+
+
+
+# ----------------PARAMETERS------------------------
+PYTHON_WORKERS_BATCH_SIZE=100  # Number of slided sequences (of length 147) to process in each batch
+
 NUC_METHOD="hybrid"  # Method for calculating free energy
-FREEDNA_METHOD="md"  # Method for free DNA calculation, Comment if want to set None
+#FREEDNA_METHOD="md"  # Method for free DNA calculation, Comment if want to set None
 
 if [ -z "${FREEDNA_METHOD:-}" ]; then
     extra_arg=""
@@ -27,19 +47,21 @@ else
     extra_arg="--freedna_method $FREEDNA_METHOD"
 fi
 
+#-----------------DIRECTORIES-------------------------------
+
 CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/bound_regions/chunks"  # Directory with chunk files
-OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/bound_regions/${NUC_METHOD}_freedna_${FREEDNA_METHOD}"  # Output directory for results
 PATTERN="pooled_peaks_bound.part_"        # Filename pattern before the number
-OUTPUT_PATTERN="pooled_peaks_bound_nucfe_"  # Output filename pattern
-PYTHON_WORKERS_BATCH_SIZE=1000  # Number of sequences to process in each batch
 
 if [ ! -d "$CHUNK_DIR" ]; then
     echo "ERROR: Chunk directory $CHUNK_DIR does not exist!"
     exit 1
 fi
+
+OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/bound_regions/${NUC_METHOD}_freedna_${FREEDNA_METHOD}"  # Output directory for results
 mkdir -p "$OUTPUT_DIR" 
 
 
+#-----------------SLURM ARRAY JOB SETUP--------------------
 # Automatically determine number of chunks
 # Uncomment below and remove the --array=1-<N> above if you prefer automatic counting
 CHUNK_FILES=(${CHUNK_DIR}/${PATTERN}*.fa)
@@ -64,9 +86,12 @@ if [ ! -f "$INPUT_FILE" ]; then
     exit 1
 fi
 
-singularity exec --bind $PWD:/project hamnucret.sif python3 /project/src/core/compute_nucfe.py \
+###-----------------RUN THE COMPUTATION----------------------
+echo "Starting free energy calculation for chunk $TASK_ID_PADDED"
+singularity exec --env TMPDIR="$SCRATCH" --bind $PWD:/project,"$SCRATCH":"$SCRATCH" \
+    hamnucret.sif python3 /project/src/core/compute_nucfe.py \
     --infile "$INPUT_FILE" \
-    --outfile "${OUTPUT_DIR}/${OUT_PATTERN}${TASK_ID_PADDED}.tsv" \
+    --outfile "${OUTPUT_DIR}/${TASK_ID_PADDED}.tsv" \
     --n_workers "$SLURM_NTASKS" \
     --batch_size $PYTHON_WORKERS_BATCH_SIZE \
     --nuc_method "$NUC_METHOD" \
