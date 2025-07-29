@@ -1,0 +1,69 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+NOT IN USE AT THE MOMENT
+
+
+#!/bin/bash
+# ---------------- SLURM parameters ----------------
+#SBATCH -p all.q
+#SBATCH --ntasks 1                 # total logical cores you requested
+#SBATCH --mem=100G
+#SBATCH --cpus-per-task=20          
+#SBATCH -N 1
+#SBATCH --mail-type=ALL
+#SBATCH -J HAMNucRetSeq_pipeline
+#SBATCH -D /home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline
+#SBATCH --output=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.out
+#SBATCH --error=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.error
+
+
+DATA_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath"
+INPUT_DIR="${DATA_DIR}/multiharmonic"
+OUTDIR="${DATA_DIR}/dF"
+mkdir -p "$OUTDIR"
+
+for input in "$INPUT_DIR"/*.tsv; do
+  base=$(basename "$input")
+
+  # Skip the lookup table in the per‐file processing loop
+  if [[ "$base" == "id_lookup.tsv" ]]; then
+    echo "Skipping lookup file: $base"
+    continue
+  fi
+
+  output="$OUTDIR/$base"
+  echo "Processing $input -> $output"
+
+  awk 'BEGIN {
+         FS=OFS="\t"
+         print "id","subid","left_index","right_index","dF","F_enthalpy","F_freedna"
+       }
+       FNR>1 {
+         dF = $5 - $6
+         print $1, $2, $3, $4, dF, $6, $7
+       }' \
+    "$input" > "$output"
+done
+
+LOOKUP_SRC="$INPUT_DIR/id_lookup.tsv"
+LOOKUP_DST="$OUTDIR/id_lookup.tsv"
+if [[ -f "$LOOKUP_SRC" ]]; then
+  echo "Copying lookup table to $LOOKUP_DST"
+  cp "$LOOKUP_SRC" "$LOOKUP_DST"
+fi
+
+rm -rf "$INPUT_DIR"
+echo "dF calculation completed for all files in $INPUT_DIR"
+echo "Output files are in $OUTDIR"

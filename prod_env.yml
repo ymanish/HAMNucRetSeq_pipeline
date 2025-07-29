@@ -21,6 +21,7 @@ dependencies:
   - seqkit
   - psutil
   - brokenaxes
+  - miller
   - pip:
       - pipdeptree
       - line_profiler

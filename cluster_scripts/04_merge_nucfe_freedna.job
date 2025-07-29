@@ -1,0 +1,154 @@
+#!/bin/bash
+# ---------------- SLURM parameters ----------------
+#SBATCH -p all.q
+#SBATCH --ntasks 1                 # total logical cores you requested
+#SBATCH --mem=100G
+#SBATCH --tmp=20G
+#SBATCH --cpus-per-task=20          # five threads for sort, mlr, etc
+#SBATCH -N 1
+#SBATCH --mail-type=ALL
+#SBATCH -J HAMNucRetSeq_pipeline
+#SBATCH -D /home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline
+#SBATCH --output=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.out
+#SBATCH --error=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.error
+#SBATCH -A undefined
+
+
+# ---------------- Load modules --------------------
+module load apps/singularity
+
+# ---------------- Runtime setup -------------------
+echo "SLURM job $SLURM_JOB_ID - array task $SLURM_ARRAY_TASK_ID"
+echo "Running on $(hostname -s)   ($(lscpu | grep 'Model name' | sed 's/^.*: //'))"
+
+export TMPDIR=/tmp/${USER}_${SLURM_JOB_ID}
+mkdir -p "$TMPDIR"
+
+echo "Using TMPDIR=$TMPDIR"
+
+
+NUC_METHOD="crystal"
+DNA_METHOD="md" 
+FDNA="None" 
+
+TO_COMBINE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath"
+
+
+BOUND_ENERGY_CHUNK_DIR="${TO_COMBINE_DIR}/${NUC_METHOD}_freedna_${FDNA}"
+###### where 001.tsv ...... 032.tsv live,
+###containing "id", "subid", "sequence", "left_index", "right_index", "F", "F_entropy", "F_enthalpy", "F_freedna"
+
+FREEDNA_ENERGY_CHUNK_DIR="${TO_COMBINE_DIR}/freedna_${DNA_METHOD}" 
+###### Directory freedna energies with format 
+######## id      subid   left_index      right_index     Ffree_bound     Ffree_unbound
+
+OUTDIR="${TO_COMBINE_DIR}/${NUC_METHOD}_freedna_${DNA_METHOD}_merged"  # Output directory for combined results
+
+mkdir -p "$OUTDIR"
+
+
+TASK_ID_PADDED=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
+
+f1="$BOUND_ENERGY_CHUNK_DIR/$TASK_ID_PADDED.tsv"
+f2="$FREEDNA_ENERGY_CHUNK_DIR/$TASK_ID_PADDED.tsv"
+out="$OUTDIR/$TASK_ID_PADDED.tsv"
+
+if [[ ! -f "$f2" ]]; then
+echo "Critical: no matching $f2, exiting."
+    exit 1
+fi 
+
+# -------- Stage files to fast scratch ----------
+echo "$(date)  Copying chunk files to $TMPDIR ..."
+cp "$f1" "$TMPDIR/f1.tsv"
+cp "$f2" "$TMPDIR/f2.tsv"
+
+# -------- 1. Drop the 'sequence' column ----------
+echo "$(date)  Removing 'sequence' column ..."
+singularity exec hamnucret.sif \
+  mlr --tsv cut -x -f sequence "$TMPDIR/f1.tsv" > "$TMPDIR/f1_noseq.tsv"
+rm "$TMPDIR/f1.tsv"
+
+# -------- 2. Sort both files identically ----------
+echo "$(date)  Sorting ..."
+# SORT_OPTS="-t $'\t' -k1,1 -k2,2 -k3,3n -k4,4n --parallel=$SLURM_CPUS_PER_TASK -S 75%"
+
+# head -n 10000 "$TMPDIR/f1_noseq.tsv" > "$TMPDIR/f1_header.tsv"
+# head -n 10000 "$TMPDIR/f2.tsv"        > "$TMPDIR/f2_header.tsv"
+
+# split off header + body for f1_noseq
+head -n1 "$TMPDIR/f1_noseq.tsv"   > "$TMPDIR/f1_header.tsv"
+tail -n +2 "$TMPDIR/f1_noseq.tsv" > "$TMPDIR/f1_body.tsv"
+
+rm "$TMPDIR/f1_noseq.tsv"
+
+# split off header + body for f2
+head -n1 "$TMPDIR/f2.tsv"   > "$TMPDIR/f2_header.tsv"
+tail -n +2 "$TMPDIR/f2.tsv" > "$TMPDIR/f2_body.tsv"
+
+rm "$TMPDIR/f2.tsv"
+
+DELIM=$'\t'
+SORT_OPTS=(-t"$DELIM" -k1,1 -k2,2 -k3,3n -k4,4n -s --parallel="$SLURM_CPUS_PER_TASK" -S 75%)
+sort "${SORT_OPTS[@]}" "$TMPDIR/f1_body.tsv" > "$TMPDIR/f1_body_sorted.tsv"
+sort "${SORT_OPTS[@]}" "$TMPDIR/f2_body.tsv" > "$TMPDIR/f2_body_sorted.tsv"
+
+
+# reassemble header + sorted body
+cat "$TMPDIR/f1_header.tsv" "$TMPDIR/f1_body_sorted.tsv" > "$TMPDIR/f1_sorted.tsv"
+cat "$TMPDIR/f2_header.tsv" "$TMPDIR/f2_body_sorted.tsv" > "$TMPDIR/f2_sorted.tsv"
+
+# clean up intermediates
+rm "$TMPDIR/"{f1_header,f1_body,f1_body_sorted,f2_header,f2_body,f2_body_sorted}.tsv
+
+# sort "${SORT_OPTS[@]}" "$TMPDIR/f1_header.tsv" > "$TMPDIR/f1_sorted.tsv"
+# sort "${SORT_OPTS[@]}" "$TMPDIR/f2_header.tsv" > "$TMPDIR/f2_sorted.tsv"
+
+echo "Line counts after sort:"
+wc -l "$TMPDIR/f1_sorted.tsv"
+wc -l "$TMPDIR/f2_sorted.tsv"
+
+head -n 10 "$TMPDIR/f1_sorted.tsv" 
+head -n 10 "$TMPDIR/f2_sorted.tsv"
+
+#####################################
+
+# # 2.a) extract only the join‐keys from each sorted file (drop header)
+# cut -f1-4 "$TMPDIR/f1_sorted.tsv" | tail -n +2 > "$TMPDIR/f1_keys.txt"
+# cut -f1-4 "$TMPDIR/f2_sorted.tsv" | tail -n +2 > "$TMPDIR/f2_keys.txt"
+
+# # 2.b) unique & sort (comm needs sorted, unique lists)
+# sort -u "$TMPDIR/f1_keys.txt" > "$TMPDIR/f1_keys_u.txt"
+# sort -u "$TMPDIR/f2_keys.txt" > "$TMPDIR/f2_keys_u.txt"
+
+# echo "Line counts after extracting keys:"
+# wc -l "$TMPDIR/f1_keys_u.txt"
+# wc -l "$TMPDIR/f2_keys_u.txt"
+
+# # 2.c) find keys in f1 not in f2
+# comm -23 "$TMPDIR/f1_keys_u.txt" "$TMPDIR/f2_keys_u.txt" > "$OUTDIR/only_in_f1.txt"
+# echo "Rows present in f1 but missing in f2 (first 4 cols):"
+# wc -l "$OUTDIR/only_in_f1.txt"
+
+# # 2.d) find keys in f2 not in f1
+# comm -13 "$TMPDIR/f1_keys_u.txt" "$TMPDIR/f2_keys_u.txt" > "$OUTDIR/only_in_f2.txt"
+# echo "Rows present in f2 but missing in f1 (first 4 cols):"
+# wc -l "$OUTDIR/only_in_f2.txt"
+
+#######################################
+
+# -------- 3. Streamed, memory‑light join ----------
+echo "$(date)  Joining ..."
+export MLR_THREADS=$SLURM_CPUS_PER_TASK   # harmless for join, good for other verbs
+
+singularity exec hamnucret.sif \
+  mlr --tsv join \
+      -j id,subid,left_index,right_index \
+      -f "$TMPDIR/f2_sorted.tsv" \
+         "$TMPDIR/f1_sorted.tsv" \
+      > "$out"
+
+# -------- 4. Move result back to project space ----------
+# mv "$TMPDIR/merged.tsv" "$out"
+echo "$(date)  Done. Output written to $out"
+

@@ -1,0 +1,88 @@
+#!/bin/bash
+# ---------------- SLURM parameters ----------------
+#SBATCH -p all.q
+#SBATCH --ntasks 1                 # total logical cores you requested
+#SBATCH --mem=10G
+#SBATCH --cpus-per-task=5          
+#SBATCH -N 1
+#SBATCH --mail-type=ALL
+#SBATCH -J HAMNucRetSeq_pipeline
+#SBATCH -D /home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline
+#SBATCH --output=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.out
+#SBATCH --error=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.error
+#SBATCH -A undefined
+
+# ---------------- Load modules --------------------
+module load apps/singularity
+
+
+# ---------------- Runtime setup -------------------
+echo "SLURM job $SLURM_JOB_ID - array task $SLURM_ARRAY_TASK_ID"
+echo "Running on $(hostname -s)   ($(lscpu | grep 'Model name' | sed 's/^.*: //'))"
+
+DATA_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath"
+REDUCED_DIR="${DATA_DIR}/crystal_freedna_md_merged/reduced"
+OUTPUT_DIR="${DATA_DIR}/multiharmonic"
+mkdir -p "$OUTPUT_DIR"
+
+
+TASK_ID_PADDED=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
+
+f1="$REDUCED_DIR/$TASK_ID_PADDED.tsv"
+out="$OUTPUT_DIR/$TASK_ID_PADDED.tsv"
+
+if [[ ! -f "$f1" ]]; then
+    echo "Critical: no matching $f1, exiting."
+    exit 1
+fi
+
+# ---------------- Run the Python script -------------------
+echo "Starting the multiharmonic energy calculation script..."
+singularity exec --bind $PWD:/project \
+            hamnucret.sif python3 /project/src/utils/calc_multiharmonic.py \
+        --infile   "$f1" \
+        --outfile  "$out" 
+
+echo "$(date)  Multiharmonic energy calculation completed for task $SLURM_ARRAY_TASK_ID"
+
+
+
+
+
+OUTDIR_dF="${DATA_DIR}/dF"
+mkdir -p "$OUTDIR_dF"
+
+LOOKUP_NAME="id_lookup.tsv"
+LOOKUP_SRC="$REDUCED_DIR/$LOOKUP_NAME"
+LOOKUP_DST="$OUTDIR_dF/$LOOKUP_NAME"
+
+if [[ ! -f "$LOOKUP_DST" ]]; then
+  echo "$(date)  Copying lookup table to $LOOKUP_DST"
+  cp "$LOOKUP_SRC" "$LOOKUP_DST"
+else
+  echo "$(date)  Lookup already staged, skipping copy"
+fi
+
+
+input_dF="$OUTPUT_DIR/$TASK_ID_PADDED.tsv"
+
+if [[ ! -f "$input_dF" ]]; then
+  echo "Critical: no matching $input_dF, exiting."
+  exit 1
+fi
+
+output_dF="$OUTDIR_dF/$TASK_ID_PADDED.tsv"
+echo "Processing $input_dF -> $output_dF"
+
+awk 'BEGIN {
+        FS=OFS="\t"
+        print "id","subid","left_index","right_index","dF","F_freedna","F_enthalpy"
+      }
+      FNR>1 {
+        dF = $5 - $6
+        print $1, $2, $3, $4, dF, $6, $7
+      }' \
+  "$input_dF" > "$output_dF"
+
+rm "$input_dF"
+echo "$(date)  dF calculation completed for task $SLURM_ARRAY_TASK_ID"

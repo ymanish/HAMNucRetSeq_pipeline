@@ -14,6 +14,8 @@ import time, logging, datetime as dt
 from src.utils.logger_util import get_logger
 import shutil
 
+from src.core.helper.bkeep import init_worker
+
 import src.core.nucbreath_core as nc
 
 def _init_BREATHER(nuc_method:str="hybrid", free_dna_method:str=None):
@@ -32,7 +34,7 @@ def main(fasta_path: Path, nuc_method:str, *, batch_size: int,
          n_workers: int, outfile:Path = None, 
          freedna_method:Optional[str] = None, 
          style:str="b_index",
-         states: Optional[List[Tuple[int, int]]] = None) -> None:
+         states: Optional[List[Tuple[int, int]]] = None, flush_every: int = 10000) -> None:
 
 
     # generator of all windows
@@ -46,7 +48,8 @@ def main(fasta_path: Path, nuc_method:str, *, batch_size: int,
 
     temp_file_paths = []
     with ProcessPoolExecutor(max_workers=n_workers,
-                                initializer=nc._init_worker) as pool:
+                                initializer=init_worker, 
+                                initargs=(flush_every,)) as pool:
 
         futures = [pool.submit(nc.calc_batch_breathing_energy,
                                                 batch,
@@ -83,10 +86,11 @@ def arg_parser():
     parser = argparse.ArgumentParser(description="Calculate nucleosome free energy from FASTA sequences.")
     parser.add_argument("--infile", type=Path, help="Path to the input FASTA file.")
     parser.add_argument("--batch_size", type=int, default=1, help="Number of sequences per batch.")
-    parser.add_argument("--n_workers", type=int, default=20, help="Number of parallel workers.")
+    parser.add_argument("--n_workers", type=int, default=2, help="Number of parallel workers.")
     parser.add_argument("--outfile", type=Path, help="Output file path for results.")
     parser.add_argument("--nuc_method", type=str, default="hybrid", help="Method for nucleosome free energy calculation.")
     parser.add_argument("--freedna_method", type=str, default=None, help="Method for free DNA energy calculation.")
+    parser.add_argument("--flush_every", type=int, default=10000, help="Number of rows to flush to disk per batch.")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -97,8 +101,8 @@ if __name__ == "__main__":
     parent_logger = get_logger(__name__, level=logging.INFO)
 
 
-    FASTA = Path(DATA_DIR/"bound_regions/pooled_peaks_bound.fa")
-    OUTFILE = Path(RESULTS_DIR/"nucbreathfe_promoter/bound_free_energy_results.txt")
+    FASTA = Path(DATA_DIR/"nucbreath_NBdata/promoters/boundprom_minpoints.fa")
+    OUTFILE = Path(RESULTS_DIR/"nucbreathfe_minpromoter/bound_free_energy_results.txt")
     tmp_dir = os.path.join(Path(__file__).parent.parent.parent, "temps")
     os.makedirs(tmp_dir, exist_ok=True)
     os.environ["TMPDIR"] = tmp_dir
@@ -121,6 +125,10 @@ if __name__ == "__main__":
         FREEDNA_METHOD = args.freedna_method
     else:
         FREEDNA_METHOD = None
+
+    if args.flush_every:
+        flush_every = args.flush_every
+
     if not FASTA.exists():
         raise FileNotFoundError(f"FASTA file {FASTA} does not exist. Please check the path.")
 
@@ -141,8 +149,9 @@ if __name__ == "__main__":
     parent_logger.info(f"Output will be written to: {OUTFILE}")
     parent_logger.info(f"Using nucleosome method: {NUC_METHOD}")
     parent_logger.info(f"Using free DNA method: {FREEDNA_METHOD}")
-    parent_logger.info(f"Using style: {STYLE} with states: {states}")
+    parent_logger.info(f"Using style: {STYLE} with states: {len(states)}")
     parent_logger.info(f"Batch size: {batch_size}, Number of workers: {n_workers}")
+    parent_logger.info(f"Flush every: {flush_every}")
 
     # main(FASTA, nuc_method="crystal", freedna_method=FREEDNA_METHOD, batch_size=100, n_workers=21, outfile=OUTFILE, style=STYLE,
     #      states=states)
@@ -152,7 +161,7 @@ if __name__ == "__main__":
          outfile=Path(OUTFILE), 
          freedna_method=FREEDNA_METHOD, 
         style=STYLE,
-         states=states)
+         states=states, flush_every=flush_every)
 
     end = time.perf_counter()
     print(f"Total time taken: {end - start:.2f} seconds")

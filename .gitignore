@@ -4,6 +4,8 @@ output/
 test/
 tests/
 examples/
+example_data/
+example_output/
 logs/
 temps/
 numba_cache/
@@ -28,3 +30,4 @@ qc_reports/
 # Ignore Python virtual environments
 venv/
 **.sif
+*.lprof

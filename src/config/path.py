@@ -25,7 +25,8 @@ print(f"Output Directory: {OUT_DIR}")
 
 PARAM_DIR = SRC_DIR / 'parameters'
 TEST_DIR = SRC_DIR / 'tests'
-EXAMPLES_DIR = SRC_DIR / 'examples'
+EXAMPLES_DATA = SRC_DIR / 'example_data'
+EXAMPLES_OUT = SRC_DIR / 'example_output'
 
 
 DATA_DIR = OUT_DIR / 'data'
