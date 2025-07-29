@@ -246,5 +246,10 @@ if __name__ == "__main__":
     # result = nuc_breath.calculate_free_energy_soft(seq601=Seq601, left=0, right=13, style="b_index")
     end = time.perf_counter()
     print(f"Time taken: {end - start:.2f} seconds")
+
+
+
+
+    
     # nuc_breath.calculate_nonbound_dna_energy(seq=Seq601, left_open=0, right_open=0, bound_ends="exclude")
 
