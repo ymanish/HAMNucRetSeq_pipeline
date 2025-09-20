@@ -7,18 +7,18 @@ It downloads raw data from the Sequence Read Archive (SRA), performs quality con
 ---
 ## Directory Layout
 
-data/
-    annotations/      # hg38.fa, hg38.chrom.sizes, cpg_islands.bed, ...
-    raw/
-        SRA/            # *.sra and *.fastq.gz after step 00
-        SRA_trimmed_1/  # optional trimmed FASTQs (step 02)
-        qc_reports/     # FastQC + MultiQC (raw)
-        qc_reports_trimmed_1/  # FastQC + MultiQC (trimmed)
-    bam/             # per-SRR aligned BAMs
-    bam_groups/ # merged group BAMs
-    metrics/     # duplication/read-depth summaries
-    macs3_mapq30_keepdup/    # MACS3 outputs
-logs/                           # mapping / MACS logs
+data/\
+    annotations/      # hg38.fa, hg38.chrom.sizes, cpg_islands.bed, ...\
+    raw/\
+        SRA/            # *.sra and *.fastq.gz after step 00\
+        SRA_trimmed_1/  # optional trimmed FASTQs (step 02)\
+        qc_reports/     # FastQC + MultiQC (raw)\
+        qc_reports_trimmed_1/  # FastQC + MultiQC (trimmed)\
+    bam/             # per-SRR aligned BAMs\
+    bam_groups/ # merged group BAMs\
+    metrics/     # duplication/read-depth summaries\
+    macs3_mapq30_keepdup/    # MACS3 outputs\
+logs/                           # mapping / MACS logs\
 
 ---
 
@@ -74,12 +74,12 @@ conda create -n mnase \
 ---
 ## Usage
 
-bash get_annotations.sh
-bash 00_download_sra.sh
-.
-.
-.
-bash 05_peak_calling.sh
+bash get_annotations.sh\
+bash 00_download_sra.sh\
+.\
+.\
+.\
+bash 05_peak_calling.sh\
  
 
 
