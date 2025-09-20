@@ -63,7 +63,7 @@ if __name__ == "__main__":
     PROM_BOUND_FA   = PROM_DIR / "promoter_bound.fa"
     PROM_UNBOUND_FA = PROM_DIR / "promoter_unbound.fa"
 
-    MINPOINT_PROM_DIR = DATA_DIR / "nbdata/promoters"
+    MINPOINT_PROM_DIR = DATA_DIR / "nucbreath_NBdata/promoters"
 
 
 
@@ -74,13 +74,13 @@ if __name__ == "__main__":
     import pickle
 
     # load unbound minima dict
-    unbound_pkl = MINPOINT_PROM_DIR / "minpoints_unbound_dict.pkl"
+    unbound_pkl = MINPOINT_PROM_DIR / "minpoints_unbound_dict.pkl" ###This data contains the positions of the 5' end of the nucleosome
     with open(unbound_pkl, "rb") as f:
         minima_unbound_dict = pickle.load(f)
     logger.info(f"Loaded unbound minima dict ({len(minima_unbound_dict)} ids) from {unbound_pkl}")
 
     # load bound minima dict
-    bound_pkl = MINPOINT_PROM_DIR / "minpoints_bound_dict.pkl"
+    bound_pkl = MINPOINT_PROM_DIR / "minpoints_bound_dict.pkl" ###This data contains the positions of the 5' end of the nucleosome
     with open(bound_pkl, "rb") as f:
         minima_bound_dict = pickle.load(f)
     logger.info(f"Loaded bound minima dict ({len(minima_bound_dict)} ids) from {bound_pkl}")

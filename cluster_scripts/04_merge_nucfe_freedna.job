@@ -31,8 +31,8 @@ NUC_METHOD="crystal"
 DNA_METHOD="md" 
 FDNA="None" 
 
-TO_COMBINE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath"
-
+# TO_COMBINE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath"
+TO_COMBINE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_boundpromoter_regions_breath"
 
 BOUND_ENERGY_CHUNK_DIR="${TO_COMBINE_DIR}/${NUC_METHOD}_freedna_${FDNA}"
 ###### where 001.tsv ...... 032.tsv live,

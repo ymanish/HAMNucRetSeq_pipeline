@@ -74,7 +74,13 @@ def calc_batch_breathing_energy(batch:List[ProcessedSequence],
             #     results.append(res_nucbreath)
 
 
-            row_cache.append([rec.id, rec.subid, rec.sequence,
+
+
+
+            # row_cache.append([rec.id, rec.subid, rec.sequence,
+            #                   left_s, right_s,
+            #                 res.F, res.F_entropy, res.F_enthalpy, res.F_freedna])
+            row_cache.append([rec.id, rec.subid, "", ## Not using sequence in the output
                               left_s, right_s,
                             res.F, res.F_entropy, res.F_enthalpy, res.F_freedna])
             

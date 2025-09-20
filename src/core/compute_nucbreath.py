@@ -101,8 +101,10 @@ if __name__ == "__main__":
     parent_logger = get_logger(__name__, level=logging.INFO)
 
 
-    FASTA = Path(DATA_DIR/"nucbreath_NBdata/promoters/boundprom_minpoints.fa")
-    OUTFILE = Path(RESULTS_DIR/"nucbreathfe_minpromoter/bound_free_energy_results.txt")
+    # FASTA = Path(DATA_DIR/"nucbreath_NBdata/promoters/boundprom_minpoints.fa")
+    # OUTFILE = Path(RESULTS_DIR/"nucbreathfe_minpromoter/bound_free_energy_results.txt")
+    FASTA = Path(DATA_DIR / "nucbreath_NBdata/promoters/boundprom_exactpoints.fa")
+    OUTFILE = Path(RESULTS_DIR / "nucbreathfe_exactpromoter/bound_free_energy_results.tsv")
     tmp_dir = os.path.join(Path(__file__).parent.parent.parent, "temps")
     os.makedirs(tmp_dir, exist_ok=True)
     os.environ["TMPDIR"] = tmp_dir

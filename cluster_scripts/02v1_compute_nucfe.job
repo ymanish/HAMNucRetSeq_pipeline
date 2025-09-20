@@ -47,7 +47,9 @@ export MKL_NUM_THREADS=1
 export NUMBA_NUM_THREADS=1
 
 # ----------------PARAMETERS------------------------
-PYTHON_WORKERS_BATCH_SIZE=10000
+# PYTHON_WORKERS_BATCH_SIZE=10000 ##this for minpoints bound and unbound promoters
+PYTHON_WORKERS_BATCH_SIZE=100 ##this is for exactpoints bound promoters
+
 # PYTHON_WORKERS_BATCH_SIZE=2
 NUC_METHOD="crystal"
 #FREEDNA_METHOD="md"
@@ -64,9 +66,13 @@ fi
 #-----------------DIRECTORIES-------------------------------
 
 # CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/boundpromoter_regions/chunks"
-CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/minpoint_unboundpromoter_regions/chunks"
+# CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/minpoint_unboundpromoter_regions/chunks"
+CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/data/exactpoint_boundpromoter_regions/chunks"
+
 # PATTERN="promoter_bound.part_"
-PATTERN="unboundprom_minpoints.part_"
+# PATTERN="unboundprom_minpoints.part_"
+PATTERN="boundprom_exactpoints.part_"
+
 
 if [ ! -d "$CHUNK_DIR" ]; then
     echo "ERROR: Chunk directory $CHUNK_DIR does not exist!"
@@ -74,7 +80,9 @@ if [ ! -d "$CHUNK_DIR" ]; then
 fi
 
 # OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/boundpromoter_regions_breath/${NUC_METHOD}_freedna_${FDNA}"
-OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath/${NUC_METHOD}_freedna_${FDNA}"
+# OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath/${NUC_METHOD}_freedna_${FDNA}"
+OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_boundpromoter_regions_breath/${NUC_METHOD}_freedna_${FDNA}"
+
 
 mkdir -p "$OUTPUT_DIR"
 

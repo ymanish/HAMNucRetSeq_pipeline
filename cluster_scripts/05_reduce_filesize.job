@@ -21,7 +21,9 @@ echo "Running on $(hostname -s)   ($(lscpu | grep 'Model name' | sed 's/^.*: //'
 echo "..."
 echo "Important!!!!!! Keep this script sequential, no array job"
 
-LARGE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath/crystal_freedna_md_merged"
+
+# LARGE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath/crystal_freedna_md_merged"
+LARGE_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_boundpromoter_regions_breath/crystal_freedna_md_merged"
 OUTPUT_DIR="${LARGE_DIR}/reduced"
 mkdir -p "$OUTPUT_DIR"
 # ---------------- Run the Python script -------------------

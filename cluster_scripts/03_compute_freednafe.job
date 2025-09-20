@@ -41,22 +41,28 @@ export MKL_NUM_THREADS=1
 export NUMBA_NUM_THREADS=1
 
 # ----------------PARAMETERS------------------------
-PYTHON_WORKERS_BATCH_SIZE=10000
+# PYTHON_WORKERS_BATCH_SIZE=10000 
+PYTHON_WORKERS_BATCH_SIZE=100
+
 FLUSH_EVERY=10000
 #PYTHON_WORKERS_BATCH_SIZE=2
 DNA_METHOD="md"
 FDNA="None"
 #-----------------DIRECTORIES-------------------------------
 
-ENERGY_CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath/crystal_freedna_${FDNA}"  # Directory with chunk files
+# ENERGY_CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath/crystal_freedna_${FDNA}"  # Directory with chunk files
+ENERGY_CHUNK_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_boundpromoter_regions_breath/crystal_freedna_${FDNA}"  # Directory with chunk files
 
 if [ ! -d "$ENERGY_CHUNK_DIR" ]; then
     echo "ERROR: Chunk directory $ENERGY_CHUNK_DIR does not exist! It is required to run this job."
     exit 1
 fi
 
-OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath/freedna_${DNA_METHOD}"  # Output directory for results
+# OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_boundpromoter_regions_breath/freedna_${DNA_METHOD}"  # Output directory for results
+OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_boundpromoter_regions_breath/freedna_${DNA_METHOD}"  # Output directory for results
+
 mkdir -p "$OUTPUT_DIR" 
+
 
 #-----------------SLURM ARRAY JOB SETUP--------------------
 # Automatically determine number of chunks

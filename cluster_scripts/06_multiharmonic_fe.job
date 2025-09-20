@@ -20,7 +20,8 @@ module load apps/singularity
 echo "SLURM job $SLURM_JOB_ID - array task $SLURM_ARRAY_TASK_ID"
 echo "Running on $(hostname -s)   ($(lscpu | grep 'Model name' | sed 's/^.*: //'))"
 
-DATA_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath"
+# DATA_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath"
+DATA_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_boundpromoter_regions_breath"
 REDUCED_DIR="${DATA_DIR}/crystal_freedna_md_merged/reduced"
 OUTPUT_DIR="${DATA_DIR}/multiharmonic"
 mkdir -p "$OUTPUT_DIR"

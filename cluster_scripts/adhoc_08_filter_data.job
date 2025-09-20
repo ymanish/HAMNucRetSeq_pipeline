@@ -1,0 +1,47 @@
+#!/bin/bash
+# ---------------- SLURM parameters ----------------
+#SBATCH -p all.q
+#SBATCH --ntasks 1                 # total logical cores you requested
+#SBATCH --mem=20G
+#SBATCH --tmp=20G
+#SBATCH --cpus-per-task=20          # five threads for sort, mlr, etc
+#SBATCH -N 1
+#SBATCH --mail-type=ALL
+#SBATCH -J HAMNucRetSeq_pipeline
+#SBATCH -D /home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline
+#SBATCH --output=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.out
+#SBATCH --error=/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline/log/Array_eukaryote.%A_%a.error
+
+
+# Define filtering thresholds as variables
+LOWER=2040
+UPPER=2057
+
+# Input directory
+INPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/minpoint_unboundpromoter_regions_breath/breath_energy"
+OUTPUT_DIR="/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline/output/exactpoint_unboundpromoter_regions_breath/breath_energy"
+mkdir -p "$OUTPUT_DIR"
+
+# First loop: Filter each file from 001.tsv to 034.tsv
+for i in {001..034}; do
+    infile="$INPUT_DIR/${i}.tsv"
+    outfile="$OUTPUT_DIR/${i}_filtered.tsv"
+    awk -v lower="$LOWER" -v upper="$UPPER" 'BEGIN { FS="\t"; OFS="\t" }
+    NR==1 { print; next }
+    ($5 >= lower && $5 <= upper) { print }' "$infile" > "$outfile"
+done
+
+# Second loop: Merge the filtered files into one file
+MERGED_OUTPUT="$OUTPUT_DIR/001.tsv"
+rm -f "$MERGED_OUTPUT"
+
+# Copy header from the first file
+cp "$OUTPUT_DIR/001_filtered.tsv" "$MERGED_OUTPUT"
+
+# Append data (excluding header) from each filtered file
+for file in "$OUTPUT_DIR"/*_filtered.tsv; do
+    # Skip the first file since its header is already added
+    if [ "$file" != "$OUTPUT_DIR/001_filtered.tsv" ]; then
+        awk 'NR>1' "$file" >> "$MERGED_OUTPUT"
+    fi
+done

@@ -4,8 +4,7 @@ threads=4
 # ---------------------------------- paths -----------------------------------
 CHAIN=../data/annotations/hg18ToHg38.over.chain.gz                     # UCSC chain
 HAM_DIR=../data/hammoud_peaks
-# MY_DIR=../data/macs3_mapq13_keepdup
-MY_DIR=../data/macs3_mapq30_keepdup_notrim
+MY_DIR=../data/macs3_mapq13_keepdup
 # MY_DIR=../data/bam_sampled
 
 

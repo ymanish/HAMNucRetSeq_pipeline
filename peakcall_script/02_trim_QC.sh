@@ -36,4 +36,4 @@ echo -e "\n[qc] FastQC -> MultiQC on trimmed reads"
 fastqc -t "${THREADS}" "${FASTQ_OUT_DIR}"/*.fastq.gz -o "${QC_DIR}"
 multiqc "${QC_DIR}" -o "${QC_DIR}"
 
-echo "Done. Inspect ${QC_DIR}/multiqc_report.html – all modules should be green."
+echo "Done. Inspect ${QC_DIR}/multiqc_report.html-all modules should be green."

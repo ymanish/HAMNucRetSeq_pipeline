@@ -4,18 +4,29 @@ export NUMBA_CACHE_DIR
 export NUMBA_CPU_NAME=generic 
 
 
-echo "-> Warming up Numba kernels (one-time per node)...."
-singularity exec \
-    --env NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" \
-    --bind $PWD:/project \
-    hamnucret.sif python3 /project/src/modules/NucFreeEnergy.py 
-echo "[+] Warm-up done - native .so files in \$NUMBA_CACHE_DIR"
+
 
 
 singularity exec \
   --env NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" \
   --bind $PWD:/project \
-  hamnucret.sif python3 /project/src/core/compute_nucbreath.py 
+  hamnucret.sif python3 /project/src/analysis/prom_breath_prob.py \
+  --eads_homo_adsorption 16.32
+
+
+
+# echo "-> Warming up Numba kernels (one-time per node)...."
+# singularity exec \
+#     --env NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" \
+#     --bind $PWD:/project \
+#     hamnucret.sif python3 /project/src/modules/NucFreeEnergy.py 
+# echo "[+] Warm-up done - native .so files in \$NUMBA_CACHE_DIR"
+
+
+# singularity exec \
+#   --env NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" \
+#   --bind $PWD:/project \
+#   hamnucret.sif python3 /project/src/core/compute_nucbreath.py 
 
 
 

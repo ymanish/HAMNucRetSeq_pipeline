@@ -22,6 +22,10 @@ dependencies:
   - psutil
   - brokenaxes
   - miller
+  - polars
+  - pyarrow
+  - dask
+  - datashader
   - pip:
       - pipdeptree
       - line_profiler

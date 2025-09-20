@@ -7,10 +7,15 @@ From: continuumio/miniconda3
 %files
     /home/pol_schiessel/maya620d/pol/Projects/Codebase/HAMNucRetSeq_pipeline/prod_env.yml /prod_env.yml
     /home/pol_schiessel/maya620d/pol/Projects/Codebase/Spermatogensis/backend /opt/backend
+    /home/pol_schiessel/maya620d/pol/Projects/Codebase/HAMNucRetSeq_pipeline/src/backend/NucMonteCarlo /opt/NucMonteCarlo
 
 %post
     /opt/conda/bin/conda update -n base conda -c defaults
     /opt/conda/bin/conda env create -f /prod_env.yml
+    
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate nucseqret
+    pip install -e /opt/NucMonteCarlo 
 
 %runscript
     source /opt/conda/etc/profile.d/conda.sh

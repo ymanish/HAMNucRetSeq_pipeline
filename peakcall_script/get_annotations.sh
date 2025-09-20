@@ -1,8 +1,22 @@
 #!/usr/bin/bash
-
 cd ../data/annotations/
-# Download annotation files (hg38 example)
-# wget "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/cpgIslandExt.txt.gz"
+
+# Download the hg38 reference genome
+if [ ! -f "$hg38.fa" ]; then
+    echo "hg38 reference genome not found. Downloading..."
+    wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+    gunzip hg38.fa.gz
+else
+    echo "hg38 reference genome already exists. Skipping download."
+fi
+
+
+
+if [ ! -f "hg38.chrom.sizes" ]; then
+    url_chrom="https://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes"
+    echo "Downloading hg38.chrom.sizes..."
+    wget -q "$url_chrom" -O hg38.chrom.sizes
+fi
 
 if [ ! -f "cpg_islands.bed" ]; then
     url_cpg="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/cpgIslandExt.txt.gz"

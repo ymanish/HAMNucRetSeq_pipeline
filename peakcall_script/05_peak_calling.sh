@@ -2,9 +2,9 @@ set -euo pipefail
 ulimit -n 8192  
 
 threads=20                       # same as upstream
-MACS_DIR=../data/macs3_mapq30_keepdup_notrim
-# BAM_DIR=../data/bam_groups
-BAM_DIR=../data/bam_groups_notrim
+MACS_DIR=../data/macs3_mapq30_keepdup
+BAM_DIR=../data/bam_groups
+# BAM_DIR=../data/bam_groups_notrim
 
 LOG_DIR=../logs
 mkdir -p "${MACS_DIR}" "${LOG_DIR}"

@@ -6,14 +6,14 @@ ulimit -n 8192    ## INCREASE MAX OPEN FILES
 REF=../data/annotations/hg38.fa 
 REFSIZE=../data/annotations/hg38.chrom.sizes                 
 IDX=../data/annotations/hg38
-MET=../data/metrics_notrim
-# MET=../data/metrics
+# MET=../data/metrics_notrim
+MET=../data/metrics
 
-# BAM_DIR=../data/bam
-# BAM_DIR_GRPS=../data/bam_groups
+BAM_DIR=../data/bam
+BAM_DIR_GRPS=../data/bam_groups
 
-BAM_DIR=../data/bam_notrim
-BAM_DIR_GRPS=../data/bam_groups_notrim
+# BAM_DIR=../data/bam_notrim
+# BAM_DIR_GRPS=../data/bam_groups_notrim
 LOG_DIR=../logs
 
 mkdir -p "${BAM_DIR}" "${LOG_DIR}" "${MET}" "${BAM_DIR_GRPS}"

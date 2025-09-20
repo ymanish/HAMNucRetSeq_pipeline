@@ -6,16 +6,16 @@ threads=21
 REF=../data/annotations/hg38.fa                  
 IDX=../data/annotations/hg38
 
-# FASTQ_DIR=../data/raw/SRA_trimmed_1/     # *.trim.fastq.gz from fastp step
-FASTQ_DIR=../data/raw/SRA/     # *.trim.fastq.gz from fastp step
+FASTQ_DIR=../data/raw/SRA_trimmed_1/     # *.trim.fastq.gz from fastp step
+# FASTQ_DIR=../data/raw/SRA/     # *.trim.fastq.gz from fastp step
 
-# BAM_DIR=../data/bam
+BAM_DIR=../data/bam
 LOG_DIR=../logs
-# MET=../data/metrics
+MET=../data/metrics
 
 
-BAM_DIR=../data/bam_notrim
-MET=../data/metrics_notrim
+# BAM_DIR=../data/bam_notrim
+# MET=../data/metrics_notrim
 
 
 mkdir -p "${BAM_DIR}" "${LOG_DIR}" "${MET}"

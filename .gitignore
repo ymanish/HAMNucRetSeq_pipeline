@@ -9,6 +9,7 @@ example_output/
 logs/
 temps/
 numba_cache/
+nucmontecarlo_data/
 # Ignore QC reports
 qc_reports/
 # Ignore any logs or temporary files

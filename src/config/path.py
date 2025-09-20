@@ -15,8 +15,8 @@ OUT_DIR = Path(__file__).parent.parent.parent
 
 ######CLUSTER DIR#######
 
-# SRC_DIR = Path('/home/pol_schiessel/maya620d/NucRetention_pipeline')
-# OUT_DIR = Path('/group/pol_schiessel/Manish/NucRetention_pipeline')
+# SRC_DIR = Path('/home/pol_schiessel/maya620d/HAMNucRetSeq_pipeline')
+# OUT_DIR = Path('/group/pol_schiessel/Manish/HAMNucRetSeq_pipeline')
 
 
 print(f"Source Directory: {SRC_DIR}")
@@ -31,6 +31,7 @@ EXAMPLES_OUT = SRC_DIR / 'example_output'
 
 DATA_DIR = OUT_DIR / 'data'
 RESULTS_DIR = OUT_DIR / 'output'
+NUCMONTE_DIR = OUT_DIR / 'nucmontecarlo_data' ### The data was copied from the NucMonteCarlo repository
 
 
 
