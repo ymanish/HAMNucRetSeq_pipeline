@@ -1,1 +1,1 @@
-# Re analysis of the Hammoud et al 2009 sequencing data is in directory peakcall_script
+# Re analysis of the Hammoud et al 2009 sequencing data is in directory "peakcall_script"
